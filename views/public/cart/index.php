@@ -18,6 +18,8 @@ echo head($head);
 <h1><?php echo __('Your cart') ?></h1>
 
 <?php if (count($cart)): ?>
+	<?php $itemIds = implode(',', array_column($cart, 'item_id')); ?>
+	<a class="pdf all" target="_blank" href="<?php echo url('cart/cart/pdf/id/'.$itemIds) ?>"><?php echo __("Generate PDF"); ?>
 	<ul>
 		<?php foreach($cart as $c): ?>
 			<?php $item = $c['item']; ?>
@@ -36,6 +38,7 @@ echo head($head);
 					<input type="hidden" name="cart_id" value="<?php echo $c->id ?>" />
 					<input type="submit" value="<?php echo __('Save note'); ?>" />
 				</form>
+				<a class="pdf" target="_blank" href="<?php echo url('cart/cart/pdf/id/'.$item->id) ?>"><?php echo __("Generate PDF"); ?>
 			 </li>
 		<?php endforeach; ?>
 		<a class="empty" href="<?php echo url('cart/cart/empty') ?>"><?php echo __('Empty cart'); ?></a>

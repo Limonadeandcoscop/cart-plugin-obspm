@@ -10,7 +10,12 @@
  */
 
 define('CART_DIR', dirname(__FILE__));
+
 require_once CART_DIR . '/controllers/CartController.php';
+
+// PDF inclusions & constants
+require_once CART_DIR . '/helpers/Pdf.php';
+require_once CART_DIR . '/libraries/fpdf-181/fpdf.php';
 
 /**
  * The CartPlugin plugin.
@@ -32,6 +37,7 @@ class CartPlugin extends Omeka_Plugin_AbstractPlugin
      * @var array Hooks for the plugin.
      */
     protected $_hooks = array(
+        'initialize',
         'install',
         'uninstall',
         'public_head',
@@ -45,6 +51,15 @@ class CartPlugin extends Omeka_Plugin_AbstractPlugin
         'public_navigation_admin_bar',
     );
 
+
+    /**
+     * Initialize the plugin.
+     */
+    public function hookInitialize()
+    {
+        // Add translation.
+        add_translation_source(dirname(__FILE__) . '/languages');
+    }
 
     /**
      * Simply include JS & CSS files
