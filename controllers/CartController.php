@@ -160,5 +160,31 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
         $this->_helper->redirector->gotoUrl('cart/cart');
     }
 
+
+    /**
+     * Generate PDF for items
+     *
+     * @return void
+     */
+    public function pdfAction()
+    {
+        // Retrieve comma separated item IDs
+        $itemsIds = explode(',', $this->getParam('id'));
+
+        // Get "Cart" table
+        $cartTable = get_db()->getTable('Cart');
+
+        // Populate array with item objects
+        $items = array();
+        foreach($itemsIds as $itemId) {
+            $item = get_record_by_id("Item", $itemId);
+            $item->note = $cartTable->getNoteOfItem($item);
+            $items[] = $item;
+        }
+
+        // Call PDF helper
+        $pdf = new Cart_Pdf($items);
+    }
+
 }
 

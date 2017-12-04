@@ -30,7 +30,7 @@ class Table_Cart extends Omeka_Db_Table
      * Check if an item is in the cart of the current user
      *
      * @param Item $item The Item object
-     * @return array|null A record set
+     * @return Item|null A record set
      */
     public function itemIsInTheCart($item)
     {
@@ -75,5 +75,16 @@ class Table_Cart extends Omeka_Db_Table
         $this->query($sql);
     }
 
+    /**
+     * Get note of an item
+     *
+     * @param Item $item The Item object
+     * @return String The note
+     */
+    public function getNoteOfItem($item)
+    {
+        $isInTheCart = $this->itemIsInTheCart($item);
+        return $isInTheCart[0]->note;
+    }
 
 }
