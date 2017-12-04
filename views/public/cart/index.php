@@ -35,7 +35,7 @@ echo head($head);
 					<textarea cols="80" rows="3" name="note"><?php echo $c->note; ?></textarea>
 					<input type="hidden" name="cart_id" value="<?php echo $c->id ?>" />
 					<input type="submit" value="<?php echo __('Save note'); ?>" />
-				<form>
+				</form>
 			 </li>
 		<?php endforeach; ?>
 		<a class="empty" href="<?php echo url('cart/cart/empty') ?>"><?php echo __('Empty cart'); ?></a>
