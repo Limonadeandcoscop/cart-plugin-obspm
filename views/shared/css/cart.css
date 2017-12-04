@@ -1,0 +1,23 @@
+.cart a.hide {
+	display: none;
+}
+
+nav .view-cart-link span {
+	border:1px solid #eee;
+	padding:2px 7px;
+	border-radius: 8px;
+}
+
+.cart-content .remove {
+	text-decoration: underline;
+	padding-left:15px;
+}
+
+.cart-content .remove:hover {
+	text-decoration: none;
+}
+
+.cart-content .empty {
+	margin-top:50px !important;
+	clear:both;
+}

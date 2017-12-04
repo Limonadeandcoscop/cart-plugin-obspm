@@ -1,0 +1,17 @@
+<div class="cart">
+	<a
+		class="cart-remove<?php if (!$isInTheCart) echo " hide" ?>"
+		href="<?php echo url('cart/cart/remove?item_id='.$item->id) ?>"
+		data-cart
+		data-cart-action="remove"
+		data-cart-item-id="<?php echo $item->id; ?>"
+		><?php echo __('Remove from cart') ?></a>
+	<a
+		class="cart-add<?php if ($isInTheCart) echo " hide" ?>"
+		href="<?php echo url('cart/cart/add?item_id='.$item->id) ?>"
+		data-cart
+		data-cart-action="add"
+		data-cart-item-id="<?php echo $item->id; ?>"
+		><?php echo __('Add to cart') ?></a>
+</div>
+
