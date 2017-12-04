@@ -9,12 +9,13 @@
 /**
  * A Cart row.
  *
- * @package Omeka\Plugins\CollectionTree
+ * @package Omeka\Plugins\Cart
  */
 class Cart extends Omeka_Record_AbstractRecord
 {
     public $item_id;
     public $user_id;
+    public $note;
 
     /**
      * Validate the record.
@@ -33,12 +34,28 @@ class Cart extends Omeka_Record_AbstractRecord
 
     	} elseif ($this->item_id && $user->id) {
 
-	    	$tableCart = $this->getTable('Cart');
-	    	$result = $tableCart->findBy(array('item_id' => $this->item_id, 'user_id' => $user->id));
-	    	if ($result) {
-	    		$this->addError('Cart error', __('The user has already add this item to its cart'));
-	    	};
+            if (!$this->id) {
+    	    	$tableCart = $this->getTable('Cart');
+    	    	$result = $tableCart->findBy(array('item_id' => $this->item_id, 'user_id' => $user->id));
+    	    	if ($result) {
+    	    		$this->addError('Cart error', __('The user has already add this item to its cart'));
+    	    	};
+            }
 	    }
     }
+
+
+    /**
+     * Save a note
+     *
+     * @param String $note The notce
+     * @return void
+     */
+    public function saveNote($note)
+    {
+        $this->note = $note;
+        $this->save();
+    }
+
 
 }

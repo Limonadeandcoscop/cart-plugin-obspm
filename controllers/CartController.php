@@ -32,10 +32,10 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
 
         // For each item in cart, get more information from element_texts table
         foreach($cart as $c) {
-            $items[] = get_record_by_id('Item', $c['item_id']);
+            $c['item'] =  get_record_by_id('Item', $c['item_id']);
         }
 
-        $this->view->items = $items;
+        $this->view->cart = $cart;
     }
 
 
@@ -76,6 +76,21 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
         $this->getResponse()->setHeader('Content-Type', 'application/json');
 
         echo json_encode($json); // Print JSON like : {"items": [123,456,...]}
+    }
+
+
+    /**
+     * Save a note
+     */
+    public function saveNoteAction() {
+
+        if (!($cart_id = $this->getParam('cart_id')) || !($note = $this->getParam('note')))
+            $this->_helper->redirector->gotoUrl('cart/cart');
+
+        $cartTable = get_db()->getTable('Cart');
+        $cart = $cartTable->findBy(array('id' => $cart_id))[0];
+        $cart->saveNote($note);
+        $this->_helper->redirector->gotoUrl('cart/cart');
     }
 
 

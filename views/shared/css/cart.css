@@ -9,8 +9,8 @@ nav .view-cart-link span {
 }
 
 .cart-content .remove {
+	display: block;
 	text-decoration: underline;
-	padding-left:15px;
 }
 
 .cart-content .remove:hover {
@@ -18,6 +18,18 @@ nav .view-cart-link span {
 }
 
 .cart-content .empty {
-	margin-top:50px !important;
-	clear:both;
+	display: block;
+	margin-top:30px;
+}
+
+.cart-content li.item {
+	margin-top:40px;
+}
+
+.cart-content form.note {
+	margin:10px 0;
+}
+
+.cart-content input  {
+	display:block;
 }

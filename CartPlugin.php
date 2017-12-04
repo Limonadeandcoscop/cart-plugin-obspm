@@ -66,6 +66,7 @@ class CartPlugin extends Omeka_Plugin_AbstractPlugin
           `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
           `user_id` int(10) unsigned NOT NULL,
           `item_id` int(10) unsigned NOT NULL,
+          `note` text,
           PRIMARY KEY (`id`),
           UNIQUE KEY `id` (`id`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;";

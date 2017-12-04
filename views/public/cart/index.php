@@ -17,9 +17,10 @@ echo head($head);
 
 <h1><?php echo __('Your cart') ?></h1>
 
-<?php if (count($items)): ?>
+<?php if (count($cart)): ?>
 	<ul>
-		<?php foreach($items as $item): ?>
+		<?php foreach($cart as $c): ?>
+			<?php $item = $c['item']; ?>
 			<li class="item <?php echo $item->id; ?>">
 				<?php echo link_to_item('', '', 'show', $item); ?>
 				<a
@@ -30,11 +31,14 @@ echo head($head);
 					class="remove"
 					><?php echo __('Remove from cart') ?>
 				</a>
+				<form action="<?php echo url('cart/cart/save-note') ?>" method="post" class="note">
+					<textarea cols="80" rows="3" name="note"><?php echo $c->note; ?></textarea>
+					<input type="hidden" name="cart_id" value="<?php echo $c->id ?>" />
+					<input type="submit" value="<?php echo __('Save note'); ?>" />
+				<form>
 			 </li>
-
-			 <a class="empty" href="<?php echo url('cart/cart/empty') ?>"><?php echo __('Empty cart'); ?></a>
-
 		<?php endforeach; ?>
+		<a class="empty" href="<?php echo url('cart/cart/empty') ?>"><?php echo __('Empty cart'); ?></a>
 	</ul>
 <?php else: ?>
 	<p><?php echo __('No items in your cart') ?></p>
