@@ -28,11 +28,6 @@ require_once CART_DIR . '/libraries/fpdf-181/fpdf.php';
  */
 class CartPlugin extends Omeka_Plugin_AbstractPlugin
 {
-    public function __construct()
-    {
-        parent::__construct();
-        $this->_helper = Zend_Registry::get('bootstrap')->getResource('Helper');
-    }
     /**
      * @var array Hooks for the plugin.
      */
