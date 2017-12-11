@@ -101,12 +101,34 @@ class CartPlugin extends Omeka_Plugin_AbstractPlugin
         // Only if user is logged in
         if (!$user = current_user()) return;
 
+        $flash = Zend_Controller_Action_HelperBroker::getStaticHelper('FlashMessenger');
+        $messenger = array(
+            'class' => [],
+            'message' => []
+        );
+        if ($flash->hasMessages()) {
+           foreach ($flash->getMessages() as $status => $messages) {
+            array_push($messenger['class'], $status);
+               foreach ($messages as $message) {
+                array_push($messenger['message'], $message);
+               }
+           }
+       }
+
         // Retrieve the cart of current user
         $cartTable = get_db()->getTable('Cart');
         $isInTheCart = $cartTable->itemIsInTheCart($args['item']);
 
         // Call template witch displays "add/remove to cart" links on items
-        echo get_view()->partial('links.phtml', array('item' => $args['item'], 'user' => $user, 'isInTheCart' => $isInTheCart));
+        echo get_view()->partial(
+            'links.phtml',
+            array(
+                'item' => $args['item'],
+                'user' => $user,
+                'isInTheCart' => $isInTheCart,
+                'messenger' => $messenger
+            )
+        );
     }
 
 

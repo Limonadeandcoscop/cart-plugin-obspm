@@ -2,11 +2,19 @@
 
 class Cart_CartController extends Omeka_Controller_AbstractActionController {
 
+    /**
+     * @var Omeka_Controller_Action_Helper_FlashMessenger
+     */
+    private $_flashMessenger;
+
     public function init() {
         $this->_helper->db->setDefaultModelName('Cart');
 
         // Disable view rendering
         $this->_helper->viewRenderer->setNoRender(true);
+
+        // FlashMessenger
+        $this->_flashMessenger = $this->_helper->getHelper('FlashMessenger');
 
         // Redirect to homepage if the user is not logged in
         if(!current_user()) {
@@ -35,9 +43,37 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
             $c['item'] =  get_record_by_id('Item', $c['item_id']);
         }
 
+        $flash = Zend_Controller_Action_HelperBroker::getStaticHelper('FlashMessenger');
+        $messenger = array(
+            'class' => [],
+            'message' => []
+        );
+        if ($flash->hasMessages()) {
+            foreach ($flash->getMessages() as $status => $messages) {
+            array_push($messenger['class'], $status);
+                foreach ($messages as $message) {
+                array_push($messenger['message'], $message);
+                }
+            }
+        }
+
         $this->view->cart = $cart;
+        $this->view->messenger = $messenger;
     }
 
+
+    /**
+     * Save a note
+     */
+    public function saveNoteAction() {
+        if (!($cart_id = $this->getParam('cart_id')) || !($note = $this->getParam('note')))
+            $this->_helper->redirector->gotoUrl('cart/cart');
+
+        $cartTable = get_db()->getTable('Cart');
+        $cart = $cartTable->findBy(array('id' => $cart_id))[0];
+        $cart->saveNote($note);
+        $this->_helper->redirector->gotoUrl('cart/cart');
+    }
 
     /**
      * Add an item in the cart (call via Ajax)
@@ -54,43 +90,18 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
         $user = current_user();
         $cart->user_id = $user->id;
 
-        // Prepare JSON response
-        $json = array();
-
-        if ($cart->isValid($_GET)) {
-
-            // Add tje item in the cart
+        if (!$cart->isValid($_GET)) {
+            $error = (string)$cart->getErrors();
+        } else { // Add item to the cart
             $cart->save(false);
-
-            // Retrieve the cart of current user
-            $cartTable = get_db()->getTable('Cart');
-            $cart = $cartTable->getCartOfUser();
-
-            // Return item_ids array
-            $json['items'] = array_map(function($i) { return $i->item_id; }, $cart);
-
-        } else {
-            $json['error'] = (string)$cart->getErrors();
         }
 
-        $this->getResponse()->setHeader('Content-Type', 'application/json');
-
-        echo json_encode($json); // Print JSON like : {"items": [123,456,...]}
-    }
-
-
-    /**
-     * Save a note
-     */
-    public function saveNoteAction() {
-
-        if (!($cart_id = $this->getParam('cart_id')) || !($note = $this->getParam('note')))
-            $this->_helper->redirector->gotoUrl('cart/cart');
-
-        $cartTable = get_db()->getTable('Cart');
-        $cart = $cartTable->findBy(array('id' => $cart_id))[0];
-        $cart->saveNote($note);
-        $this->_helper->redirector->gotoUrl('cart/cart');
+        // Response
+        $this->_formatResponse(
+            $this->getParam('format'),
+            __('Notice successfuly added to your cart'),
+            isset($error) ? $error : null
+        );
     }
 
 
@@ -100,36 +111,28 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
      * @return JSON The number of item in the connected user's cart
      */
     public function removeAction() {
-
-        $json = array();
-
         if (!$item_id = $this->getParam('item_id')) {
-
-            $json['error'] = __('Item ID is required');
-
+            $error = __('Item ID is required');
         } else {
-
             $item           = get_record_by_id('Item', $item_id);
             $cartTable      = get_db()->getTable('Cart');
             $isInTheCart    = $cartTable->itemIsInTheCart($item);
-            if(!$isInTheCart)
-                $json['error'] = __("The Item isn't in the user's cart");
+            if (!$isInTheCart) {
+                $error = __("The Item isn't in the user's cart");
+            }
         }
 
-        if (!isset($json['error'])) {
-
-            $item       = get_record_by_id('Item', $item_id);
-            $cartTable  = get_db()->getTable('Cart');
+        // If no error, delete item in user cart
+        if (!isset($error)) {
             $cartTable->removeItemFromTheCart($item);
-            $cartOfUser = $cartTable->getCartOfUser();
-
-            // Return item_ids array
-            $json['items'] = array_map(function($i) { return $i->item_id; }, $cartOfUser);
         }
 
-        $this->getResponse()->setHeader('Content-Type', 'application/json');
-
-        echo json_encode($json); // Print JSON like : {"items": [123,456,...]}
+        // Response
+        $this->_formatResponse(
+            $this->getParam('format'),
+            __('Notice successfuly removed from your cart'),
+            isset($error) ? $error : null
+        );
     }
 
 
@@ -142,6 +145,7 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
 
         $cartTable = get_db()->getTable('Cart');
         $cartTable->emptyUserCart();
+        $this->_flashMessenger->addMessage( __('Successfully emptied cart'), 'success');
         $this->_helper->redirector->gotoUrl('cart/cart');
 
     }
@@ -184,6 +188,33 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
 
         // Call PDF helper
         $pdf = new Cart_Pdf($items);
+    }
+    
+    private function _formatResponse($format, $message, $error) {
+        if ($format === 'json') {
+            // Retrieve the cart of current user
+            $cartTable = get_db()->getTable('Cart');
+            $cartOfUser = $cartTable->getCartOfUser();
+
+            $this->getResponse()->setHeader('Content-Type', 'application/json');
+            $json = array('items' => array_map(function($i) { return $i->item_id; }, $cartOfUser));
+            if (isset($error)) {
+                $json['error'] = $error;
+            } else {
+                $json['message'] = $message;
+            }
+            echo json_encode($json); // Print JSON like : {"items": [123,456,...]}
+        } else {
+            if ( isset($error)) {
+                $message = $error;
+                $status = 'error';
+            } else {
+                $message = $message;
+                $status = 'success';
+            }
+            $this->_flashMessenger->addMessage($message, $status);
+            $this->redirect($_SERVER['HTTP_REFERER']);
+        }
     }
 
 }
