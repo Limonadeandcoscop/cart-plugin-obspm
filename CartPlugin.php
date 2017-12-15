@@ -15,6 +15,7 @@ require_once CART_DIR . '/controllers/CartController.php';
 
 // PDF inclusions & constants
 require_once CART_DIR . '/helpers/Pdf.php';
+require_once CART_DIR . '/helpers/CSV.php';
 require_once CART_DIR . '/libraries/fpdf-181/fpdf.php';
 
 /**

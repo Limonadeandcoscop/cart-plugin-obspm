@@ -43,6 +43,7 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
             $c['item'] =  get_record_by_id('Item', $c['item_id']);
         }
 
+        // If message, display it, with status as div class
         $flash = Zend_Controller_Action_HelperBroker::getStaticHelper('FlashMessenger');
         $messenger = array(
             'class' => [],
@@ -76,10 +77,11 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
     }
 
     /**
-     * Add an item in the cart (call via Ajax)
-     * TODO?: Manage javascript failure with redirection to page item with success/fail message
+     * Add an item in the cart
      *
-     * @return JSON The number of item in the connected user's cart
+     * Return depends on format parameter
+     * @return Redirect If no format, redirect to referrer with status message
+     * @return JSON If format json, return cart information
      */
     public function addAction() {
 
@@ -106,9 +108,11 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
 
 
     /**
-     * Remove an item from the cart (call via Ajax)
+     * Remove an item from the cart
      *
-     * @return JSON The number of item in the connected user's cart
+     * Return depends on format parameter
+     * @return Redirect If no format, redirect to referrer with status message
+     * @return JSON If format json, return cart information
      */
     public function removeAction() {
         if (!$item_id = $this->getParam('item_id')) {
@@ -142,38 +146,27 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
      * @return true
      */
     public function emptyAction() {
-
         $cartTable = get_db()->getTable('Cart');
         $cartTable->emptyUserCart();
         $this->_flashMessenger->addMessage( __('Successfully emptied cart'), 'success');
         $this->_helper->redirector->gotoUrl('cart/cart');
-
     }
 
     /**
-     * Remove an item from the cart (call via Ajax)
+     * Manage cart submission
      *
-     * @return JSON The number of item in the connected user's cart
+     * @return PDF If form action is pdf
+     * @return PDCSVF If form action is csv
+     * @return REDIRECT If form action is mail
      */
-    public function removeItemAction() {
+    public function formAction() {
 
-        $id = $this->_getParam('id');
-        $item = get_record_by_id('Item', $id);
-        $cartTable  = get_db()->getTable('Cart');
-        $cartTable->removeItemFromTheCart($item);
-        $this->_helper->redirector->gotoUrl('cart/cart');
-    }
+        $itemsIds = $this->_getParam('items');
 
-
-    /**
-     * Generate PDF for items
-     *
-     * @return void
-     */
-    public function pdfAction()
-    {
-        // Retrieve comma separated item IDs
-        $itemsIds = explode(',', $this->getParam('id'));
+        if (!isset($itemsIds) || count($itemsIds) === 0) {
+            $this->_flashMessenger->addMessage(__('You should select at least one notice'), 'error');
+            $this->redirect($_SERVER['HTTP_REFERER']);
+        }
 
         // Get "Cart" table
         $cartTable = get_db()->getTable('Cart');
@@ -182,14 +175,59 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
         $items = array();
         foreach($itemsIds as $itemId) {
             $item = get_record_by_id("Item", $itemId);
-            $item->note = $cartTable->getNoteOfItem($item);
             $items[] = $item;
         }
 
-        // Call PDF helper
-        $pdf = new Cart_Pdf($items);
+        switch ($this->_getParam('type')) {
+            case 'pdf':
+                new Cart_Pdf($items);
+                break;
+            case 'mail':
+                $this->_redirecMailto($items);
+                break;
+            case 'csv':
+                new Cart_CSV($items);
+                break;
+        }
+    }
+
+    /**
+     * Redirect user with mailto:
+     * Format mail body with cart items
+     */
+    private function _redirecMailto($items) {
+        $subject = get_option('site_title');
+        $body = array();
+        $body[] = __('Bonjour');
+        $body[] = __('J\'ai pensé que ce contenu, extrait de la bibliothèque numérique de l\'Observatoire de Paris, pourrait vous intéresser.');
+
+        $newline = '%0D%0A';
+        foreach($items as $item) {
+            $list = [];
+            $list[] = metadata($item, array('Dublin Core', 'Title')) . ': ';
+            $list[] = absolute_url(
+                array(
+                    'controller' => 'items',
+                    'module' => NULL,
+                    'action' => 'show',
+                    'id'=> $item->id
+                )
+            );
+            $body[] = implode($newline, $list);
+        }
+        $body[] = __('A bientôt');
+        $body[] = absolute_url('/');
+
+        $mailto = 'mailto:?subject=' . $subject . '&body=' . implode($newline.$newline, $body);
+        header('Location: ' . $mailto);
     }
     
+    /**
+     * Format response, depends on format value (empy or json for now)
+     * 
+     * @return Redirect If no format, redirect to referrer with status message
+     * @return JSON If format json, return cart information
+     */
     private function _formatResponse($format, $message, $error) {
         if ($format === 'json') {
             // Retrieve the cart of current user

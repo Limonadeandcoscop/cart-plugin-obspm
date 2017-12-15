@@ -26,6 +26,7 @@ jQuery(document).ready(function(jQuery) {
     })
   }
 
+  // Hide message
   function clearMessage() {
     jQuery('#cart-message')
       .removeClass()
@@ -33,8 +34,9 @@ jQuery(document).ready(function(jQuery) {
       .text();
   }
 
-  // On ajax error
-  // TODO: Display error
+  // Display message
+  // message: text to display
+  // type: class added to div (success, error....)
   function displayMessage(message, type) {
     jQuery('#cart-message')
       .addClass(type)
@@ -49,6 +51,11 @@ jQuery(document).ready(function(jQuery) {
     }, 2000);
   }
 
+  // Is cart page 
+  function isCartView() {
+    return jQuery('[data-cart-list-items]').length !== 0;
+  }
+
   // On cart action, disable default event (browser redirection), and call cart route
   function onCartAction(event) {
     event.preventDefault();
@@ -57,36 +64,68 @@ jQuery(document).ready(function(jQuery) {
 
   // On ajax success
   function onSuccess(data, element) {
+    // If error, display it
     if (data.error) {
       return displayMessage(data.error, MESSAGE_TYPE_ERROR);
     }
-    if (data.message) {
-      displayMessage(data.message, MESSAGE_TYPE_SUCCESS);
-    }
+
+    // Update badge count
     var currentId = jQuery(element).data('cart-item-id');
     updateBadge(data.items.length);
 
-    if (!updateCartListView(currentId)) {
+    if (isCartView()) {
+      // If cart empty, no need to update view, reload page
+      if (data.items.length === 0) {
+        window.location.reload();
+        return;
+      }
+  
+      // Remove removed item
+      var descriptionContainer = jQuery('li[data-cart-description-id=' + currentId + ']').first();
+      if (descriptionContainer.length !== 0) {
+          descriptionContainer.remove();
+      }
+    } else {
       updateButtons(currentId, data.items);
     }
+  
+    // Display message
+    if (data.message) {
+      displayMessage(data.message, MESSAGE_TYPE_SUCCESS);
+    }
+  }
+
+  // On Cart Submit
+  function onCartSubmit(event) {
+    event.preventDefault();
+    
+    // If no notice selected, display error message
+    if (jQuery('#cart-form input:checked').length === 0) {
+      displayMessage('You should select at least one notice', MESSAGE_TYPE_ERROR);
+      return;
+    }
+
+    var formData = {};
+    var type = jQuery(this).attr('value');
+    jQuery.each(jQuery('#cart-form').serializeArray(), function(i,o){
+      if (formData[this.name]) {
+        if (!formData[this.name].push) {
+          formData[this.name] = [formData[this.name]];
+        }
+        formData[this.name].push(this.value || '');
+      } else {
+        formData[this.name] = this.value || '';
+      }
+    });
+
+    // Submit form, in new window, with data
+    var url = jQuery('#cart-form').attr('action') + '?type=' + type + '&' + jQuery('#cart-form').serialize();
+    window.open(url);
   }
 
   // In admin bar, update items number in cart link
   function updateBadge(number) {
     jQuery('.view-cart-link span').html(number);
-  }
-
-  function updateCartListView(currentId) {
-    var descriptionContainer = jQuery('li[data-cart-description-id=' + currentId + ']').first();
-    if (descriptionContainer.length !== 0) {
-      descriptionContainer.remove();
-      if (jQuery('[data-cart-list-items').children().length === 0) {
-
-      }
-      return true;
-    }
-
-    return false;
   }
 
   // Update data-cart link state
@@ -103,6 +142,10 @@ jQuery(document).ready(function(jQuery) {
 
   // Detect click on all link  with data-cart attributes
   jQuery('a[data-cart]').click(onCartAction);
+
+  // On form, detect submit and button click
+  jQuery('#cart-form').submit(onCartSubmit);
+  jQuery('#cart-form button').click(onCartSubmit);
 
   // On load, if message not empty, hide it
   if (jQuery('#cart-message').text().length !== 0) {
