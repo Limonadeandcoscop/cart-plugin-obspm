@@ -183,6 +183,7 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
             case 'bibtex':
                 $url = '/items/browse?output=bibtex&range=' . implode(',', $itemsIds);
                 header('Location: ' . url($url));
+                exit;
                 break;
             case 'csv':
                 new Cart_CSV($items);
@@ -225,6 +226,7 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
 
         $mailto = 'mailto:?subject=' . $subject . '&body=' . implode($newline.$newline, $body);
         header('Location: ' . $mailto);
+        exit;
     }
     
     /**
