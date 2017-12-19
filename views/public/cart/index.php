@@ -26,7 +26,7 @@ echo head($head);
 		<ul data-cart-list-items>
 			<?php foreach($cart as $c): ?>
 				<?php $item = $c['item']; ?>
-				<li class="item <?php echo $item->id; ?>" data-cart-description-id="<?php echo $item->id; ?>">
+				<li class="item" data-cart-description-id="<?php echo $item->id; ?>">
 					<input type="checkbox" name="items[]" value="<?php echo $item->id; ?>"/>
 					<?php echo link_to_item('', '', 'show', $item); ?>
 					<a
