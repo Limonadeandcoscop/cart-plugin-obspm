@@ -22,6 +22,9 @@ echo head($head);
 	<form id="cart-form" action="<?php echo absolute_url('cart/cart/form/id/'); ?>">
 		<button type="submit" name="type" value="pdf"><?php echo __("Generate PDF"); ?></button>
 		<button type="submit" name="type" value="csv"><?php echo __("Generate CSV"); ?></button>
+	<?php if ($displayBibtext) { ?>
+		<button type="submit" name="type" value="bibtex"><?php echo __("Generate Bibtex"); ?></button>
+	<?php } ?>
 		<button type="submit" name="type" value="mail"><?php echo __("Send by mail"); ?></button>
 		<ul data-cart-list-items>
 			<?php foreach($cart as $c): ?>
@@ -39,6 +42,9 @@ echo head($head);
 					</a>
 					<a class="pdf" target="_blank" href="<?php echo url('cart/cart/form/id/?type=pdf&items[]='.$item->id) ?>"><?php echo __("Generate PDF"); ?></a>
 					<a class="csv" target="_blank" href="<?php echo url('cart/cart/form/id/?type=csv&items[]='.$item->id) ?>"><?php echo __("Generate CSV"); ?></a>
+				<?php if ($displayBibtext) { ?>
+					<a class="bibtex" target="_blank" href="<?php echo url('cart/cart/form/id/?type=bibtex&items[]='.$item->id) ?>"><?php echo __("Generate Bibtex"); ?></a>
+				<?php } ?>
 				</li>
 			<?php endforeach; ?>
 		</ul>

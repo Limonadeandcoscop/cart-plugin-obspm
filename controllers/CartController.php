@@ -59,6 +59,7 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
         }
 
         $this->view->cart = $cart;
+        $this->view->displayBibtext = plugin_is_active('Bibtex');
         $this->view->messenger = $messenger;
     }
 
@@ -179,14 +180,18 @@ class Cart_CartController extends Omeka_Controller_AbstractActionController {
         }
 
         switch ($this->_getParam('type')) {
-            case 'pdf':
-                new Cart_Pdf($items);
+            case 'bibtex':
+                $url = '/items/browse?output=bibtex&range=' . implode(',', $itemsIds);
+                header('Location: ' . url($url));
+                break;
+            case 'csv':
+                new Cart_CSV($items);
                 break;
             case 'mail':
                 $this->_redirecMailto($items);
                 break;
-            case 'csv':
-                new Cart_CSV($items);
+            case 'pdf':
+                new Cart_Pdf($items);
                 break;
         }
     }
