@@ -30,7 +30,7 @@ echo head($head);
 			<?php foreach($cart as $c): ?>
 				<?php $item = $c['item']; ?>
 				<li class="item" data-cart-description-id="<?php echo $item->id; ?>">
-					<input type="checkbox" name="items[]" value="<?php echo $item->id; ?>"/>
+					<input type="checkbox" name="items[]" value="<?php echo $item->id; ?>" checked/>
 					<?php echo link_to_item('', '', 'show', $item); ?>
 					<a
 						href="<?php echo url('cart/cart/remove?item_id='.$item->id) ?>"
@@ -40,11 +40,6 @@ echo head($head);
 						class="remove"
 						><?php echo __('Remove from cart') ?>
 					</a>
-					<a class="pdf" target="_blank" href="<?php echo url('cart/cart/form/id/?type=pdf&items[]='.$item->id) ?>"><?php echo __("Generate PDF"); ?></a>
-					<a class="csv" target="_blank" href="<?php echo url('cart/cart/form/id/?type=csv&items[]='.$item->id) ?>"><?php echo __("Generate CSV"); ?></a>
-				<?php if ($displayBibtext) { ?>
-					<a class="bibtex" target="_blank" href="<?php echo url('cart/cart/form/id/?type=bibtex&items[]='.$item->id) ?>"><?php echo __("Generate Bibtex"); ?></a>
-				<?php } ?>
 				</li>
 			<?php endforeach; ?>
 		</ul>
