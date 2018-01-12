@@ -8,28 +8,46 @@
 class Cart_CSV {
 
 	private $_csv;
+	private $lines;
+	private $labels;
 
 	public function __construct($items) {
 		$this->_csv = [];
+		$this->_labels = [];
+		$this->_lines = [];
 
-		// Add line in csv for each item 
+		// Clean data
 		foreach($items as $item) {
 			if (get_class($item) == "Item") {
-				$this->_addLine($item);
+				$this->_sanitizeItem($item);
 			}
 		}
+
+		$this->_createCSVArray();
 
 		// return csv to download
 		$this->_render();
 	}
 
+	private function _createCSVArray() {
+		array_push($this->_csv, $this->_labels);
+
+		foreach ($this->_lines as &$line) {
+			$csvLine = array();
+			foreach ($this->_labels as &$label) {
+				$csvLine[$label] = array_key_exists($label, $line) ? $line[$label] : '';
+			}
+			array_push($this->_csv, $csvLine);
+		}
+	}
+
 	/**
-	 * Add a line to csv array
+	 * Update labels list if necessary
+	 * Add sanitized line to lines list 
 	 * @param Item $item The item object
 	 */
-	protected function _addLine($item) {
+	protected function _sanitizeItem($item) {
 		$line = [];
-		$labels = [];
 
 		// Retrieve elements texts
 		$elements = all_element_texts($item, array('return_type' => 'array'));
@@ -42,16 +60,15 @@ class Cart_CSV {
 		foreach ($elements as $elementSetName => $elementTexts) {
 			foreach ($elementTexts as $elementName => $elementsText) {
 				foreach ($elementsText as $element) {
-					array_push($labels, str_replace('PDF:', '', __('PDF:'.$elementName)));
-					array_push($line, $this->_getValue($element));
+					$label = str_replace('PDF:', '', __('PDF:'.$elementName));
+					$line[$label] = $this->_getValue($element);
+					if (!in_array($label, $this->_labels)) {
+						array_push($this->_labels, $label);
+					}
 				}
 			}
 		}
-
-		if (count($this->_csv) === 0) {
-			array_push($this->_csv, $labels);
-		}
-		array_push($this->_csv, $line);
+		array_push($this->_lines, $line);
 	}
 
 
